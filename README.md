@@ -47,6 +47,19 @@ Edit `.env` with your real data:
    ```bash
    python main.py
    ```
+### Update interval
+
+The default interval between title updates is **5 seconds**. You can change this by editing the last line of the script:
+
+time.sleep(5)
+
+Replace `5` with any value in seconds. A shorter interval means faster updates but more API requests.
+
+### Rate limits
+
+Scratch allows up to **10 requests per second** to its REST API, as documented in the [Scratch REST API wiki](https://github.com/scratchfoundation/scratch-rest-api/wiki). This script makes at most 2 requests per cycle (one read + one write), so even with a 1-second interval you'll stay well within the limit.
+
+Please keep your usage reasonable and benevolent — don't set the interval lower than needed. A value between 2 and 10 seconds is recommended.
 
 ## Hosting 24/7
 
