@@ -22,17 +22,20 @@ A Python script that monitors your Scratch project statistics (loves, favorites,
 ## Installation
 
 1. Clone the repository:
-
-git clone https://github.com/YOUR_USERNAME/scratch-stats-title-updater.git
-cd scratch-stats-title-updater
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/scratch-stats-title-updater.git
+   cd scratch-stats-title-updater
+   ```
 
 2. Install dependencies:
-
-pip install -r requirements.txt
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 3. Set up environment variables:
-
-cp .env.example .env
+   ```bash
+   cp .env.example .env
+   ```
 
 Edit `.env` with your real data:
 - `SCRATCH_SESSION_ID` — See [Getting your session ID](https://github.com/TimMcCool/scratchattach/wiki/Getting-your-session-id)
@@ -41,8 +44,9 @@ Edit `.env` with your real data:
 - `SESSION_EXPIRY` — The expiration date of your session ID (UTC format, from browser cookies)
 
 4. Run the script:
-
-python main.py
+   ```bash
+   python main.py
+   ```
 
 ## Hosting 24/7
 
