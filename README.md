@@ -23,7 +23,7 @@ A Python script that monitors your Scratch project statistics (loves, favorites,
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/scratch-stats-title-updater.git
+   git clone https://github.com/KrisbelGV/scratch-stats-title-updater.git
    cd scratch-stats-title-updater
    ```
 
