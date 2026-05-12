@@ -36,18 +36,17 @@ A Python script that monitors your Scratch project statistics (loves, favorites,
    ```bash
    cp .env.example .env
    ```
-
-Edit `.env` with your real data:
-- `SCRATCH_SESSION_ID` — See [Getting your session ID](https://github.com/TimMcCool/scratchattach/wiki/Getting-your-session-id)
-- `SCRATCH_USERNAME` — Your Scratch username (case sensitive)
-- `SCRATCH_PROJECT_ID` — The project ID to monitor
-- `SESSION_EXPIRY` — The expiration date of your session ID (UTC format, from browser cookies)
+   Edit `.env` with your real data:
+   - `SCRATCH_SESSION_ID` — See [Getting your session ID](https://github.com/TimMcCool/scratchattach/wiki/Getting-your-session-id)
+   - `SCRATCH_USERNAME` — Your Scratch username (case sensitive)
+   - `SCRATCH_PROJECT_ID` — The project ID to monitor
+   - `SESSION_EXPIRY` — The expiration date of your session ID (UTC format, from browser cookies)
 
 4. Run the script:
    ```bash
    python main.py
    ```
-### Update interval
+## Update interval
 
 The default interval between title updates is **5 seconds**. You can change this by editing the last line of the script:
 
@@ -55,7 +54,7 @@ time.sleep(5)
 
 Replace `5` with any value in seconds. A shorter interval means faster updates but more API requests.
 
-### Rate limits
+## Rate limits
 
 Scratch allows up to **10 requests per second** to its REST API, as documented in the [Scratch REST API wiki](https://github.com/scratchfoundation/scratch-rest-api/wiki). This script makes at most 2 requests per cycle (one read + one write), so even with a 1-second interval you'll stay well within the limit.
 
