@@ -1,6 +1,7 @@
 import os
 import time
 import sys
+import warnings
 from datetime import datetime, timezone, timedelta
 import scratchattach as scratch3
 from dotenv import load_dotenv
@@ -8,6 +9,8 @@ from scratchattach.utils.exceptions import (
     RateLimitedError, Response429, FetchError,
     Unauthenticated, Unauthorized, LoginFailure, XTokenError
 )
+
+warnings.filterwarnings("ignore", category=scratch3.LoginDataWarning)
 
 load_dotenv()
 
@@ -21,6 +24,10 @@ if not all([SESSION_ID, USERNAME, PROJECT_ID, SESSION_EXPIRY]):
         "Environment variables are missing. Make sure the .env file exists "
         "and contains SCRATCH_SESSION_ID, SCRATCH_USERNAME, SCRATCH_PROJECT_ID and SESSION_EXPIRY"
     )
+
+INTERVAL = 5
+MAX_RETRY_WAIT = 600
+MAX_AUTH_FAILS = 3
 
 def log_fatal(message):
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -39,13 +46,20 @@ session = scratch3.login_by_id(SESSION_ID, username=USERNAME)
 project = session.connect_project(PROJECT_ID)
 
 print(f"Monitoring statistics of project '{project.title}'...")
-print("Interval between checks: 5 seconds")
+print(f"Interval between checks: {INTERVAL} seconds")
 print("Server running. Waiting for stat changes...\n")
 
 retry_count = 0
 auth_fail_count = 0
-max_retry_wait = 600
-max_auth_fails = 3
+was_in_error = False
+total_wait = 0
+
+def handle_retryable_error(message, wait_time):
+    global was_in_error, total_wait
+    print(message)
+    was_in_error = True
+    total_wait += wait_time
+    time.sleep(wait_time)
 
 while True:
     now = datetime.now(timezone.utc)
@@ -63,10 +77,15 @@ while True:
         favorites = project.favorites
         views = project.views
         
-        new_title = f"❤️{loves} ⭐{favorites} 👁️{views} | Live stats title"
+        new_title = f"❤️{loves} ⭐{favorites} ▶{views} | Live stats title"
         
         if project.title != new_title:
             project.set_title(new_title)
+            
+        if was_in_error:
+            print(f"Recovered after {total_wait}s of downtime.")
+            was_in_error = False
+            total_wait = 0
         
         retry_count = 0
         auth_fail_count = 0
@@ -79,41 +98,37 @@ while True:
         
     except Unauthorized as e:
         auth_fail_count += 1
-        print(f"Unauthorized ({auth_fail_count}/{max_auth_fails}): {e}")
+        print(f"Unauthorized ({auth_fail_count}/{MAX_AUTH_FAILS}): {e}")
         
-        if auth_fail_count >= max_auth_fails:
+        if auth_fail_count >= MAX_AUTH_FAILS:
             message = "FATAL: Too many authentication failures. Stopping script."
             print(message)
             log_fatal(message)
             sys.exit(1)
         
-        print("Waiting 5 minutes before retry...")
-        time.sleep(300)
+        handle_retryable_error("Waiting 5 minutes before retry...", 300)
         continue
         
     except RateLimitedError:
         retry_count += 1
-        wait_time = min(2 ** retry_count, max_retry_wait)
-        print(f"Rate limit (scratchattach). Waiting {wait_time}s...")
-        time.sleep(wait_time)
+        wait_time = min(2 ** retry_count, MAX_RETRY_WAIT)
+        handle_retryable_error(f"Rate limit (scratchattach). Waiting {wait_time}s...", wait_time)
         continue
         
     except Response429:
         retry_count += 1
-        wait_time = min(2 ** retry_count, max_retry_wait)
-        print(f"Error 429 from Scratch API. Waiting {wait_time}s...")
-        time.sleep(wait_time)
+        wait_time = min(2 ** retry_count, MAX_RETRY_WAIT)
+        handle_retryable_error(f"Error 429 from Scratch API. Waiting {wait_time}s...", wait_time)
         continue
         
     except FetchError:
         retry_count += 1
-        wait_time = min(2 ** retry_count, max_retry_wait)
-        print(f"Scratch API error (FetchError). Waiting {wait_time}s...")
-        time.sleep(wait_time)
+        wait_time = min(2 ** retry_count, MAX_RETRY_WAIT)
+        handle_retryable_error(f"Scratch API error (FetchError). Waiting {wait_time}s...", wait_time)
         continue
         
     except Exception as e:
-        print(f"Error: {e}. Trying again in 5 seconds...")
+        handle_retryable_error(f"Error: {e}. Trying again in {INTERVAL} seconds...", INTERVAL)
         retry_count = 0
     
-    time.sleep(5)
+    time.sleep(INTERVAL)
